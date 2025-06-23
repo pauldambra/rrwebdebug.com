@@ -76,7 +76,7 @@ function setupAnalysisButton() {
         analysisUrl.searchParams.set("url", url);
       }
 
-      window.open(analysisUrl.href, '_blank');
+      window.open(analysisUrl.href, "_blank");
     });
   }
 }
