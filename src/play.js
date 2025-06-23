@@ -62,6 +62,25 @@ function setupVersionSelector(version) {
   });
 }
 
+function setupAnalysisButton() {
+  const analysisBtn = document.getElementById("analysisBtn");
+  if (analysisBtn) {
+    analysisBtn.addEventListener("click", () => {
+      // Open analysis page in new tab
+      const analysisUrl = new URL(window.location.origin + "/analysis/");
+
+      // If we have a URL source, pass it to the analysis page
+      const location = new URL(document.location);
+      const url = location.searchParams.get("url");
+      if (url) {
+        analysisUrl.searchParams.set("url", url);
+      }
+
+      window.open(analysisUrl.href, '_blank');
+    });
+  }
+}
+
 async function playVideo(events, config) {
   const Player = window.rrwebPlayer.Player || window.rrwebPlayer; // for legacy version
   const component = new Player({
@@ -253,6 +272,7 @@ async function startPlayer() {
   });
 
   setupVersionSelector(version);
+  setupAnalysisButton();
   document.head.appendChild(scriptEl);
 }
 
