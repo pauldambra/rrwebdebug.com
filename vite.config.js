@@ -9,6 +9,7 @@ module.exports = defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         play: resolve(__dirname, "play/index.html"),
+        analysis: resolve(__dirname, "analysis/index.html"),
       },
     },
   },
