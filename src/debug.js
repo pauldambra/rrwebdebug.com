@@ -177,8 +177,8 @@ export class DebugManager {
     window.jsonEditor.scrollTo([unfilteredIndex]);
     const domElement = window.jsonEditor.findElement([unfilteredIndex]);
     if (domElement) {
-      domElement.style.transition = 'background-color 0.3s ease-in-out';
-      domElement.style.backgroundColor = 'rgba(255, 255, 0, 0.15)'; // Transparent yellow
+      domElement.style.transition = "background-color 0.3s ease-in-out";
+      domElement.style.backgroundColor = "rgba(255, 255, 0, 0.15)"; // Transparent yellow
     }
   }
 
@@ -326,11 +326,9 @@ export class DebugManager {
   }
 
   updateEventDetails() {
-    const current = this.getCurrentEvent();
     const previous = this.getPreviousEvent();
     const next = this.getNextEvent();
 
-    this.updateEventDisplay("current-event", current, "Current Event");
     this.updateEventDisplay("previous-event", previous, "Previous Event");
     this.updateEventDisplay("next-event", next, "Next Event");
   }
@@ -516,21 +514,6 @@ export class DebugManager {
         <!-- Event Details -->
         <div class="border-top pt-2">
           <div class="accordion accordion-flush" id="debug-accordion">
-            <div class="accordion-item">
-              <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                        data-bs-target="#current-collapse">
-                  Current Event
-                </button>
-              </h2>
-              <div id="current-collapse" class="accordion-collapse collapse show" 
-                   data-bs-parent="#debug-accordion">
-                <div class="accordion-body p-2" id="current-event">
-                  <!-- Current event details -->
-                </div>
-              </div>
-            </div>
-            
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
