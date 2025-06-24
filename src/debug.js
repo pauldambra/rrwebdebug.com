@@ -47,6 +47,7 @@ export class DebugManager {
 
   setPlayer(player) {
     console.log("Setting player for debug manager:", player);
+    console.log("Available player methods:", Object.getOwnPropertyNames(player).filter(name => typeof player[name] === 'function'));
     this.player = player;
   }
 
@@ -119,8 +120,20 @@ export class DebugManager {
   }
 
   pausePlayer() {
-    if (this.player && this.player.pause) {
-      this.player.pause();
+    if (this.player) {
+      console.log("Attempting to pause player...");
+      if (this.player.pause) {
+        this.player.pause();
+        console.log("Player paused using pause()");
+      } else if (this.player.stop) {
+        this.player.stop();
+        console.log("Player stopped using stop()");
+      } else if (this.player.togglePlay) {
+        this.player.togglePlay();
+        console.log("Player toggled using togglePlay()");
+      } else {
+        console.warn("No pause method found on player");
+      }
     }
   }
 
@@ -131,15 +144,29 @@ export class DebugManager {
     const event = this.filteredEvents[index];
 
     if (this.player && event) {
-      // Seek to the timestamp of the event
+      // Calculate relative timestamp from the start of the recording
+      const startTime = this.events.length > 0 ? this.events[0].timestamp : 0;
+      const relativeTime = event.timestamp - startTime;
+
+      console.log(`Seeking to event at timestamp: ${event.timestamp}, relative: ${relativeTime}ms`);
+
+      // Seek to the relative timestamp
       if (this.player.goto) {
-        this.player.goto(event.timestamp);
+        this.player.goto(relativeTime);
       } else if (this.player.seekTo) {
-        this.player.seekTo(event.timestamp);
+        this.player.seekTo(relativeTime);
+      } else if (this.player.play) {
+        // Fallback: try to use play with timestamp
+        this.player.play(relativeTime);
+      } else {
+        console.warn('No suitable seek method found on player:', Object.keys(this.player));
       }
     }
 
     this.updateDebugUI();
+
+    // Automatically scroll to and highlight the current event in JSON panel
+    this.highlightCurrentEventInJSON(event);
   }
 
   goToPrevious() {
@@ -174,6 +201,15 @@ export class DebugManager {
     return this.currentIndex < this.filteredEvents.length - 1
       ? this.filteredEvents[this.currentIndex + 1]
       : null;
+  }
+
+  getUnfilteredIndex(event) {
+    if (!event) return -1;
+    return this.events.findIndex(e =>
+      e.timestamp === event.timestamp &&
+      e.type === event.type &&
+      JSON.stringify(e.data) === JSON.stringify(event.data)
+    );
   }
 
   showDebugPanel() {
@@ -246,10 +282,17 @@ export class DebugManager {
       debugSlider.value = this.currentIndex;
     }
 
-    // Update counter
+    // Update counter with unfiltered index and total events
     const debugCounter = document.getElementById("debug-counter");
     if (debugCounter) {
-      debugCounter.textContent = `${this.currentIndex} / ${Math.max(0, this.filteredEvents.length - 1)}`;
+      const currentEvent = this.filteredEvents[this.currentIndex];
+      const unfilteredIndex = this.getUnfilteredIndex(currentEvent);
+
+      if (unfilteredIndex >= 0) {
+        debugCounter.innerHTML = `<div class="small">${unfilteredIndex} / ${this.events.length - 1}</div>`;
+      } else {
+        debugCounter.innerHTML = `<div class="small text-muted">? / ${this.events.length - 1}</div>`;
+      }
     }
 
     // Update buttons
@@ -287,21 +330,23 @@ export class DebugManager {
       return;
     }
 
+    // Find the unfiltered index for this event
+    const unfilteredIndex = this.getUnfilteredIndex(event);
+
     const eventSummary = this.createEventSummary(event);
 
     element.innerHTML = `
       <div class="border-bottom pb-2 mb-2">
         <strong>${title}</strong>
+        ${unfilteredIndex >= 0 ? `<small class="text-muted ms-2">(Event #${unfilteredIndex})</small>` : ''}
       </div>
       <div class="small">
         <div><strong>Time:</strong> ${new Date(event.timestamp).toISOString()}</div>
         <div><strong>Type:</strong> ${this.snapshotTypes[event.type] || `Unknown(${event.type})`}</div>
         ${eventSummary}
       </div>
-      <button class="btn btn-sm btn-outline-secondary mt-2" onclick="debugManager.showEventDetails(${JSON.stringify(event).replace(/"/g, "&quot;")})">
-        Show Full Event
-      </button>
-    `;
+
+      `;
   }
 
   createEventSummary(event) {
@@ -334,53 +379,433 @@ export class DebugManager {
     return summary;
   }
 
-  showEventDetails(event) {
-    // Create a modal or expand detailed view
-    const modal = document.createElement("div");
-    modal.className = "modal fade";
-    modal.innerHTML = `
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Event Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <pre class="bg-light p-3" style="max-height: 400px; overflow-y: auto;">${JSON.stringify(event, null, 2)}</pre>
-          </div>
-        </div>
-      </div>
-    `;
+  highlightCurrentEventInJSON(event) {
+    if (!event) return;
 
-    document.body.appendChild(modal);
+    const unfilteredIndex = this.getUnfilteredIndex(event);
+    if (unfilteredIndex === -1) {
+      console.log("Could not find event index for highlighting");
+      return;
+    }
 
-    // Show modal using Bootstrap
-    if (window.bootstrap && window.bootstrap.Modal) {
-      const bootstrapModal = new window.bootstrap.Modal(modal);
-      bootstrapModal.show();
-      modal.addEventListener("hidden.bs.modal", () => {
-        document.body.removeChild(modal);
+    console.log(`Highlighting event at index ${unfilteredIndex} in JSON panel`);
+
+    // Add visual feedback to JSON panel border
+    this.highlightJSONPanel();
+
+    // Clear any previous highlights
+    this.clearPreviousHighlights();
+
+    // Try multiple approaches to find and highlight the event
+    let highlighted = false;
+
+    // Approach 1: Try JSON editor API first
+    if (window.jsonEditor) {
+      try {
+        const pathFormats = [
+          [unfilteredIndex],
+          [unfilteredIndex.toString()],
+          unfilteredIndex.toString(),
+          unfilteredIndex
+        ];
+
+        for (const pathFormat of pathFormats) {
+          try {
+            window.jsonEditor.select({ path: pathFormat });
+            if (window.jsonEditor.scrollTo) {
+              window.jsonEditor.scrollTo(pathFormat);
+            }
+            console.log(`JSON editor API worked with format:`, pathFormat);
+            // Still try DOM highlighting even if API works, since API might not be visually obvious
+            break;
+          } catch (err) {
+            console.log(`JSON editor path format failed:`, pathFormat, err.message);
+          }
+        }
+      } catch (error) {
+        console.log("JSON editor API failed:", error.message);
+      }
+    }
+
+    // Approach 2: DOM-based highlighting (more reliable visual feedback)
+    highlighted = this.highlightEventInDOM(unfilteredIndex);
+
+    if (!highlighted) {
+      console.log("Could not highlight event, using basic scroll");
+      this.scrollToEventFallback(unfilteredIndex);
+    }
+  }
+
+  clearPreviousHighlights() {
+    // Remove any existing highlights
+    const jsonContainer = document.getElementById('jsoneditor');
+    if (jsonContainer) {
+      const highlighted = jsonContainer.querySelectorAll('[data-debug-highlight="true"]');
+      highlighted.forEach(el => {
+        el.style.backgroundColor = '';
+        el.style.boxShadow = '';
+        el.removeAttribute('data-debug-highlight');
       });
-    } else {
-      // Fallback if Bootstrap modal not available
-      modal.style.display = "block";
-      modal.style.backgroundColor = "rgba(0,0,0,0.5)";
-      modal.style.position = "fixed";
-      modal.style.top = "0";
-      modal.style.left = "0";
-      modal.style.width = "100%";
-      modal.style.height = "100%";
-      modal.style.zIndex = "9999";
+    }
+  }
 
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          document.body.removeChild(modal);
+  highlightEventInDOM(eventIndex) {
+    const jsonContainer = document.getElementById('jsoneditor');
+    if (!jsonContainer) {
+      console.log("JSON container not found");
+      return false;
+    }
+
+    console.log(`Attempting to highlight event ${eventIndex} in JSON container`);
+
+    // Debug: Log the actual DOM structure to understand what we're working with
+    console.log("JSON container HTML:", jsonContainer.innerHTML.substring(0, 500));
+    console.log("Available classes in container:", Array.from(jsonContainer.querySelectorAll('*')).slice(0, 10).map(el => el.className));
+
+    // Strategy 1: Simple approach - just highlight the entire JSON area with a message
+    this.addSimpleHighlight(jsonContainer, `Looking for Event #${eventIndex}`);
+
+    // Strategy 2: Look specifically for JSON array elements in vanilla-jsoneditor
+    let targetElement = null;
+
+    // Look for array items in the JSON structure
+    // Vanilla-jsoneditor creates nodes with specific structure
+    const arrayElements = jsonContainer.querySelectorAll('.jse-json-node');
+    console.log(`Found ${arrayElements.length} JSON nodes`);
+
+    // Look through the array elements for our target index
+    for (let i = 0; i < arrayElements.length; i++) {
+      const node = arrayElements[i];
+
+      // Look for the key that might match our event index
+      const keyElement = node.querySelector('.jse-key');
+      if (keyElement) {
+        const keyText = keyElement.textContent.trim().replace(/"/g, '');
+        console.log(`Checking node ${i}: key="${keyText}"`);
+
+        if (keyText === eventIndex.toString()) {
+          targetElement = node;
+          console.log(`Found target element for event ${eventIndex} at node ${i}`);
+          break;
+        }
+      }
+    }
+
+    // If no exact match, try to find array items by counting
+    if (!targetElement) {
+      console.log("No exact key match, looking for array structure");
+
+      // Look for the root array container
+      const rootNode = jsonContainer.querySelector('.jse-json-node.jse-root');
+      if (rootNode) {
+        console.log("Found root node, looking for array children");
+
+        // Look for child nodes that might represent array items
+        const childNodes = rootNode.querySelectorAll(':scope > .jse-content .jse-json-node');
+        console.log(`Found ${childNodes.length} child nodes`);
+
+        if (eventIndex < childNodes.length) {
+          targetElement = childNodes[eventIndex];
+          console.log(`Using array child node at index ${eventIndex}`);
+        } else {
+          // Try to find any child with a key that looks like a number
+          for (const child of childNodes) {
+            const keyEl = child.querySelector('.jse-key');
+            if (keyEl) {
+              const keyText = keyEl.textContent.trim().replace(/"/g, '');
+              if (keyText === eventIndex.toString()) {
+                targetElement = child;
+                console.log(`Found child with matching key: ${keyText}`);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Strategy 3: Look for array item containers
+    if (!targetElement) {
+      console.log("Looking for array item containers");
+
+      // In vanilla-jsoneditor, array items might be grouped differently
+      // Try to find elements that represent whole events (not just properties)
+
+      // Look for nodes that might be event containers (objects with multiple properties)
+      const allNodes = Array.from(jsonContainer.querySelectorAll('.jse-json-node:not(.jse-root)'));
+      console.log(`Found ${allNodes.length} non-root JSON nodes`);
+
+      // Group nodes by their parent to find event objects
+      const nodesByParent = new Map();
+      allNodes.forEach(node => {
+        const parent = node.parentElement;
+        if (!nodesByParent.has(parent)) {
+          nodesByParent.set(parent, []);
+        }
+        nodesByParent.get(parent).push(node);
+      });
+
+      console.log(`Found ${nodesByParent.size} parent groups`);
+
+      // Look for a parent that has multiple children (likely an event object)
+      const eventContainers = [];
+      nodesByParent.forEach((children, parent) => {
+        if (children.length > 3) { // Events typically have multiple properties
+          eventContainers.push(parent);
+          console.log(`Found potential event container with ${children.length} properties`);
         }
       });
 
-      modal.querySelector(".btn-close").addEventListener("click", () => {
-        document.body.removeChild(modal);
+      // If we found event containers, try to use the one at our index
+      if (eventContainers.length > eventIndex) {
+        targetElement = eventContainers[eventIndex];
+        console.log(`Using event container at index ${eventIndex}`);
+      } else {
+        // Fallback: just use a calculated position based on the number of nodes
+        const approximateNodeIndex = Math.floor((eventIndex / this.events.length) * allNodes.length);
+        if (approximateNodeIndex < allNodes.length) {
+          targetElement = allNodes[approximateNodeIndex];
+          console.log(`Using approximate node at position ${approximateNodeIndex} for event ${eventIndex}`);
+        }
+      }
+    }
+
+    // Strategy 4: Calculate scroll position and highlight area around it
+    if (!targetElement) {
+      console.log("No specific element found, trying positional approach");
+
+      // Calculate approximate scroll position
+      const totalHeight = jsonContainer.scrollHeight;
+      const eventsCount = this.events.length;
+      const estimatedPosition = eventIndex * (totalHeight / eventsCount);
+
+      console.log(`Scrolling to estimated position ${estimatedPosition} (${eventIndex}/${eventsCount} * ${totalHeight})`);
+
+      // Scroll to approximate position
+      jsonContainer.scrollTo({
+        top: estimatedPosition,
+        behavior: 'smooth'
       });
+
+      // Add a visible indicator at the scroll position
+      setTimeout(() => {
+        this.addScrollPositionIndicator(jsonContainer, `Event #${eventIndex} (approx)`);
+      }, 300);
+
+      return true;
+    }
+
+    // Strategy 5: If we found a specific element, highlight it
+    if (targetElement) {
+      this.addHighlightToElement(targetElement, `Event #${eventIndex}`);
+
+      // Scroll to the element
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+
+      console.log(`Successfully highlighted and scrolled to event ${eventIndex}`);
+      return true;
+    }
+
+    return false;
+  }
+
+  addSimpleHighlight(container, message) {
+    // Add a simple border highlight to the entire container
+    container.style.transition = 'border 0.3s ease';
+    container.style.border = '3px solid rgba(255, 193, 7, 0.8)';
+
+    // Add a floating message
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 193, 7, 0.9);
+      color: black;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10000;
+      pointer-events: none;
+    `;
+    messageEl.textContent = message;
+
+    container.style.position = 'relative';
+    container.appendChild(messageEl);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+      container.style.border = '';
+      if (messageEl.parentElement) {
+        messageEl.remove();
+      }
+    }, 3000);
+  }
+
+  addScrollPositionIndicator(container, message) {
+    // Add a visible line or indicator at the current scroll position
+    const indicator = document.createElement('div');
+    indicator.style.cssText = `
+      position: absolute;
+      top: ${container.scrollTop + container.clientHeight / 2}px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255, 193, 7, 0.8);
+      z-index: 1000;
+      pointer-events: none;
+    `;
+
+    const label = document.createElement('div');
+    label.style.cssText = `
+      position: absolute;
+      top: -25px;
+      right: 10px;
+      background: rgba(255, 193, 7, 0.9);
+      color: black;
+      padding: 4px 8px;
+      border-radius: 2px;
+      font-size: 11px;
+    `;
+    label.textContent = message;
+
+    indicator.appendChild(label);
+    container.style.position = 'relative';
+    container.appendChild(indicator);
+
+    // Remove after 4 seconds
+    setTimeout(() => {
+      if (indicator.parentElement) {
+        indicator.remove();
+      }
+    }, 4000);
+  }
+
+  addHighlightToElement(element, label) {
+    // Add visual highlight
+    element.style.transition = 'all 0.3s ease';
+    element.style.backgroundColor = 'rgba(255, 193, 7, 0.2)';
+    element.style.boxShadow = '0 0 0 2px rgba(255, 193, 7, 0.5)';
+    element.style.borderRadius = '3px';
+    element.setAttribute('data-debug-highlight', 'true');
+
+    // Add a small label if there's space
+    if (!element.querySelector('.debug-label')) {
+      const labelEl = document.createElement('span');
+      labelEl.className = 'debug-label';
+      labelEl.style.cssText = `
+        position: absolute;
+        top: -20px;
+        left: 0;
+        background: rgba(255, 193, 7, 0.9);
+        color: #000;
+        padding: 2px 6px;
+        font-size: 10px;
+        border-radius: 2px;
+        z-index: 1000;
+        pointer-events: none;
+      `;
+      labelEl.textContent = label;
+
+      element.style.position = 'relative';
+      element.appendChild(labelEl);
+
+      // Remove label after 3 seconds
+      setTimeout(() => {
+        if (labelEl.parentElement) {
+          labelEl.remove();
+        }
+      }, 3000);
+    }
+
+    // Remove highlight after 5 seconds
+    setTimeout(() => {
+      if (element.getAttribute('data-debug-highlight') === 'true') {
+        element.style.backgroundColor = '';
+        element.style.boxShadow = '';
+        element.removeAttribute('data-debug-highlight');
+      }
+    }, 5000);
+  }
+
+
+
+  highlightJSONPanel() {
+    const jsonPanel = document.querySelector('.col-lg-3:not(.debug-col) .card');
+    if (jsonPanel) {
+      // Add a brief highlight effect
+      jsonPanel.style.transition = 'box-shadow 0.3s ease';
+      jsonPanel.style.boxShadow = '0 0 15px rgba(13, 110, 253, 0.5)';
+
+      // Remove highlight after a delay
+      setTimeout(() => {
+        jsonPanel.style.boxShadow = '';
+      }, 1000);
+    }
+  }
+
+
+
+  scrollToEventFallback(eventIndex) {
+    console.log(`Using fallback scroll for event index ${eventIndex}`);
+
+    // Try DOM-based approach first
+    const jsonContainer = document.getElementById('jsoneditor');
+    if (jsonContainer) {
+      // Look for elements that might represent array indices
+      const possibleSelectors = [
+        `[data-path="${eventIndex}"]`,
+        `[data-index="${eventIndex}"]`,
+        `.json-item:nth-child(${eventIndex + 1})`,
+        `.array-item:nth-child(${eventIndex + 1})`
+      ];
+
+      let foundElement = null;
+      for (const selector of possibleSelectors) {
+        try {
+          foundElement = jsonContainer.querySelector(selector);
+          if (foundElement) {
+            console.log(`Found event element using selector: ${selector}`);
+            break;
+          }
+        } catch (err) {
+          // Invalid selector, continue
+        }
+      }
+
+      if (foundElement) {
+        // Scroll to the found element
+        foundElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+
+        // Add temporary highlight
+        foundElement.style.transition = 'background-color 0.5s ease';
+        foundElement.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
+        setTimeout(() => {
+          foundElement.style.backgroundColor = '';
+        }, 1500);
+
+        console.log(`Scrolled to and highlighted event element`);
+      } else {
+        // Fallback to approximate scroll position
+        const totalHeight = jsonContainer.scrollHeight;
+        const eventsCount = this.events.length;
+        const approximatePosition = eventIndex * (totalHeight / eventsCount);
+
+        jsonContainer.scrollTo({
+          top: approximatePosition,
+          behavior: 'smooth'
+        });
+
+        console.log(`Fallback scroll to approximate position ${approximatePosition}px of ${totalHeight}px total`);
+      }
+    } else {
+      console.warn("JSON editor container not found for fallback scroll");
     }
   }
 

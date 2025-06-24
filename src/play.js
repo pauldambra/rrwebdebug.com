@@ -176,7 +176,14 @@ function showJSON(json) {
       navigationBar: false,
     },
   });
+
+  // Store editor globally for debug access
+  window.jsonEditor = editor;
   window.events = json;
+
+  console.log("JSON editor created and stored globally");
+  console.log("JSON editor methods:", Object.getOwnPropertyNames(editor).filter(name => typeof editor[name] === 'function'));
+  console.log("JSON editor instance:", editor);
 }
 
 function getGistId(url) {
