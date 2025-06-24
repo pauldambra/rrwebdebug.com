@@ -46,20 +46,10 @@ export class DebugManager {
   }
 
   setPlayer(player) {
-    console.log("Setting player for debug manager:", player);
-    console.log(
-      "Available player methods:",
-      Object.getOwnPropertyNames(player).filter(
-        (name) => typeof player[name] === "function",
-      ),
-    );
     this.player = player;
   }
 
   setEvents(events) {
-    console.log(
-      `Setting events for debug manager: ${events ? events.length : 0} events`,
-    );
     this.events = events;
     // Don't filter events immediately - wait until debug mode is activated
   }
@@ -90,14 +80,12 @@ export class DebugManager {
   }
 
   toggleDebugMode() {
-    console.log("Toggling debug mode, current state:", this.isDebugMode);
     this.isDebugMode = !this.isDebugMode;
     this._updateDebugMode();
   }
 
   enterDebugMode() {
     if (!this.isDebugMode) {
-      console.log("Entering debug mode...");
       this.isDebugMode = true;
       this._updateDebugMode();
     }
@@ -105,7 +93,6 @@ export class DebugManager {
 
   exitDebugMode() {
     if (this.isDebugMode) {
-      console.log("Exiting debug mode...");
       this.isDebugMode = false;
       this._updateDebugMode();
     }
@@ -126,16 +113,12 @@ export class DebugManager {
 
   pausePlayer() {
     if (this.player) {
-      console.log("Attempting to pause player...");
       if (this.player.pause) {
         this.player.pause();
-        console.log("Player paused using pause()");
       } else if (this.player.stop) {
         this.player.stop();
-        console.log("Player stopped using stop()");
       } else if (this.player.togglePlay) {
         this.player.togglePlay();
-        console.log("Player toggled using togglePlay()");
       } else {
         console.warn("No pause method found on player");
       }
@@ -152,10 +135,6 @@ export class DebugManager {
       // Calculate relative timestamp from the start of the recording
       const startTime = this.events.length > 0 ? this.events[0].timestamp : 0;
       const relativeTime = event.timestamp - startTime;
-
-      console.log(
-        `Seeking to event at timestamp: ${event.timestamp}, relative: ${relativeTime}ms`,
-      );
 
       // Seek to the relative timestamp
       if (this.player.goto) {
@@ -395,11 +374,8 @@ export class DebugManager {
 
     const unfilteredIndex = this.getUnfilteredIndex(event);
     if (unfilteredIndex === -1) {
-      console.log("Could not find event index for highlighting");
       return;
     }
-
-    console.log(`Highlighting event at index ${unfilteredIndex} in JSON panel`);
 
     // Add visual feedback to JSON panel border
     this.highlightJSONPanel();
@@ -617,12 +593,14 @@ export class DebugManager {
       if (currentEvent && currentEvent.timestamp) {
         // Convert timestamp to string and look for it in the DOM
         const timestampStr = currentEvent.timestamp.toString();
-        const timestampElements = Array.from(jsonContainer.querySelectorAll('.jse-value')).filter(el =>
-          el.textContent?.trim() === timestampStr
-        );
+        const timestampElements = Array.from(
+          jsonContainer.querySelectorAll(".jse-value"),
+        ).filter((el) => el.textContent?.trim() === timestampStr);
 
         if (timestampElements.length > 0) {
-          targetElement = timestampElements[0].closest('.jse-json-node') || timestampElements[0];
+          targetElement =
+            timestampElements[0].closest(".jse-json-node") ||
+            timestampElements[0];
           console.log(`Found timestamp element for value ${timestampStr}`);
         }
       }

@@ -64,8 +64,6 @@ function setupVersionSelector(version) {
 }
 
 function setupModeSelector() {
-  console.log("Setting up mode selector...");
-
   // Get mode radio buttons
   const playerMode = document.getElementById("player-mode");
   const debugMode = document.getElementById("debug-mode");
