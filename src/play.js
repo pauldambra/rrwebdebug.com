@@ -66,10 +66,26 @@ function setupModeSelector() {
   const debugMode = document.getElementById("debug-mode");
 
   if (playerMode && debugMode) {
+    // Check URL for initial debug mode state
+    const location = new URL(document.location);
+    const debugParam = location.searchParams.get("debug");
+
+    if (debugParam === "true") {
+      debugMode.checked = true;
+      playerMode.checked = false;
+      // Activate debug mode after everything is loaded
+      setTimeout(() => {
+        if (window.debugManager) {
+          window.debugManager.enterDebugMode();
+        }
+      }, 100);
+    }
+
     // Player mode handler
     playerMode.addEventListener("change", () => {
       if (playerMode.checked) {
         exitAllModes();
+        updateURLForMode(false);
       }
     });
 
@@ -82,6 +98,7 @@ function setupModeSelector() {
         } else {
           console.error("Debug manager not available!");
         }
+        updateURLForMode(true);
       }
     });
 
@@ -89,6 +106,22 @@ function setupModeSelector() {
     console.error("Mode selector buttons not found!");
   }
 }
+
+function updateURLForMode(isDebugMode) {
+  const location = new URL(document.location);
+
+  if (isDebugMode) {
+    location.searchParams.set("debug", "true");
+  } else {
+    location.searchParams.delete("debug");
+  }
+
+  // Update URL without reloading the page
+  window.history.replaceState({}, document.title, location.href);
+}
+
+// Make the function available globally for the debug manager
+window.updateURLForMode = updateURLForMode;
 
 function setupAnalysisButton() {
   const analysisBtn = document.getElementById("analysisBtn");

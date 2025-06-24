@@ -88,6 +88,11 @@ export class DebugManager {
     if (!this.isDebugMode) {
       this.isDebugMode = true;
       this._updateDebugMode();
+
+      // Update URL to include debug parameter
+      if (window.updateURLForMode) {
+        window.updateURLForMode(true);
+      }
     }
   }
 
@@ -95,6 +100,11 @@ export class DebugManager {
     if (this.isDebugMode) {
       this.isDebugMode = false;
       this._updateDebugMode();
+
+      // Update URL to remove debug parameter
+      if (window.updateURLForMode) {
+        window.updateURLForMode(false);
+      }
     }
   }
 
