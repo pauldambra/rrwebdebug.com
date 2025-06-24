@@ -182,7 +182,12 @@ function showJSON(json) {
   window.events = json;
 
   console.log("JSON editor created and stored globally");
-  console.log("JSON editor methods:", Object.getOwnPropertyNames(editor).filter(name => typeof editor[name] === 'function'));
+  console.log(
+    "JSON editor methods:",
+    Object.getOwnPropertyNames(editor).filter(
+      (name) => typeof editor[name] === "function",
+    ),
+  );
   console.log("JSON editor instance:", editor);
 }
 
