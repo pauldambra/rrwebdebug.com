@@ -208,7 +208,7 @@ export class RRWebAnalyzer {
             texts: 0,
             attributes: 0,
             total: 0,
-            nodes: new Map()
+            nodes: new Map(),
           });
         }
 
@@ -221,11 +221,17 @@ export class RRWebAnalyzer {
           secondData.total += data.adds.length;
 
           // Track per node
-          data.adds.forEach(add => {
+          data.adds.forEach((add) => {
             if (add.parentId) {
               const nodeKey = `${add.parentId}`;
               if (!secondData.nodes.has(nodeKey)) {
-                secondData.nodes.set(nodeKey, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+                secondData.nodes.set(nodeKey, {
+                  adds: 0,
+                  removes: 0,
+                  texts: 0,
+                  attributes: 0,
+                  total: 0,
+                });
               }
               secondData.nodes.get(nodeKey).adds++;
               secondData.nodes.get(nodeKey).total++;
@@ -238,11 +244,17 @@ export class RRWebAnalyzer {
           secondData.total += data.removes.length;
 
           // Track per node
-          data.removes.forEach(remove => {
+          data.removes.forEach((remove) => {
             if (remove.parentId) {
               const nodeKey = `${remove.parentId}`;
               if (!secondData.nodes.has(nodeKey)) {
-                secondData.nodes.set(nodeKey, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+                secondData.nodes.set(nodeKey, {
+                  adds: 0,
+                  removes: 0,
+                  texts: 0,
+                  attributes: 0,
+                  total: 0,
+                });
               }
               secondData.nodes.get(nodeKey).removes++;
               secondData.nodes.get(nodeKey).total++;
@@ -255,11 +267,17 @@ export class RRWebAnalyzer {
           secondData.total += data.texts.length;
 
           // Track per node
-          data.texts.forEach(text => {
+          data.texts.forEach((text) => {
             if (text.id) {
               const nodeKey = `${text.id}`;
               if (!secondData.nodes.has(nodeKey)) {
-                secondData.nodes.set(nodeKey, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+                secondData.nodes.set(nodeKey, {
+                  adds: 0,
+                  removes: 0,
+                  texts: 0,
+                  attributes: 0,
+                  total: 0,
+                });
               }
               secondData.nodes.get(nodeKey).texts++;
               secondData.nodes.get(nodeKey).total++;
@@ -272,11 +290,17 @@ export class RRWebAnalyzer {
           secondData.total += data.attributes.length;
 
           // Track per node
-          data.attributes.forEach(attr => {
+          data.attributes.forEach((attr) => {
             if (attr.id) {
               const nodeKey = `${attr.id}`;
               if (!secondData.nodes.has(nodeKey)) {
-                secondData.nodes.set(nodeKey, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+                secondData.nodes.set(nodeKey, {
+                  adds: 0,
+                  removes: 0,
+                  texts: 0,
+                  attributes: 0,
+                  total: 0,
+                });
               }
               secondData.nodes.get(nodeKey).attributes++;
               secondData.nodes.get(nodeKey).total++;
@@ -293,8 +317,8 @@ export class RRWebAnalyzer {
         ...data,
         nodes: Array.from(data.nodes.entries()).map(([nodeId, nodeData]) => ({
           nodeId,
-          ...nodeData
-        }))
+          ...nodeData,
+        })),
       }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
@@ -302,11 +326,12 @@ export class RRWebAnalyzer {
   }
 
   getMutationDetailsForTimeRange(startTime, endTime) {
-    const mutationsInRange = this.events.filter(event =>
-      event.type === 3 &&
-      event.data?.source === 0 &&
-      event.timestamp >= startTime &&
-      event.timestamp < endTime
+    const mutationsInRange = this.events.filter(
+      (event) =>
+        event.type === 3 &&
+        event.data?.source === 0 &&
+        event.timestamp >= startTime &&
+        event.timestamp < endTime,
     );
 
     const nodesMutations = new Map();
@@ -318,11 +343,17 @@ export class RRWebAnalyzer {
       // Process adds
       if (data.adds) {
         typeCounts.adds += data.adds.length;
-        data.adds.forEach(add => {
+        data.adds.forEach((add) => {
           if (add.parentId) {
             const nodeId = `${add.parentId}`;
             if (!nodesMutations.has(nodeId)) {
-              nodesMutations.set(nodeId, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+              nodesMutations.set(nodeId, {
+                adds: 0,
+                removes: 0,
+                texts: 0,
+                attributes: 0,
+                total: 0,
+              });
             }
             nodesMutations.get(nodeId).adds++;
             nodesMutations.get(nodeId).total++;
@@ -333,11 +364,17 @@ export class RRWebAnalyzer {
       // Process removes
       if (data.removes) {
         typeCounts.removes += data.removes.length;
-        data.removes.forEach(remove => {
+        data.removes.forEach((remove) => {
           if (remove.parentId) {
             const nodeId = `${remove.parentId}`;
             if (!nodesMutations.has(nodeId)) {
-              nodesMutations.set(nodeId, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+              nodesMutations.set(nodeId, {
+                adds: 0,
+                removes: 0,
+                texts: 0,
+                attributes: 0,
+                total: 0,
+              });
             }
             nodesMutations.get(nodeId).removes++;
             nodesMutations.get(nodeId).total++;
@@ -348,11 +385,17 @@ export class RRWebAnalyzer {
       // Process texts
       if (data.texts) {
         typeCounts.texts += data.texts.length;
-        data.texts.forEach(text => {
+        data.texts.forEach((text) => {
           if (text.id) {
             const nodeId = `${text.id}`;
             if (!nodesMutations.has(nodeId)) {
-              nodesMutations.set(nodeId, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+              nodesMutations.set(nodeId, {
+                adds: 0,
+                removes: 0,
+                texts: 0,
+                attributes: 0,
+                total: 0,
+              });
             }
             nodesMutations.get(nodeId).texts++;
             nodesMutations.get(nodeId).total++;
@@ -363,11 +406,17 @@ export class RRWebAnalyzer {
       // Process attributes
       if (data.attributes) {
         typeCounts.attributes += data.attributes.length;
-        data.attributes.forEach(attr => {
+        data.attributes.forEach((attr) => {
           if (attr.id) {
             const nodeId = `${attr.id}`;
             if (!nodesMutations.has(nodeId)) {
-              nodesMutations.set(nodeId, { adds: 0, removes: 0, texts: 0, attributes: 0, total: 0 });
+              nodesMutations.set(nodeId, {
+                adds: 0,
+                removes: 0,
+                texts: 0,
+                attributes: 0,
+                total: 0,
+              });
             }
             nodesMutations.get(nodeId).attributes++;
             nodesMutations.get(nodeId).total++;
@@ -384,22 +433,30 @@ export class RRWebAnalyzer {
       .map(([nodeId, data]) => ({
         nodeId,
         ...data,
-        rate: durationSeconds > 0 ? (data.total / durationSeconds).toFixed(2) : '0.00'
+        rate:
+          durationSeconds > 0
+            ? (data.total / durationSeconds).toFixed(2)
+            : "0.00",
       }))
       .sort((a, b) => b.total - a.total);
 
     // Calculate percentages for types
-    const typesWithPercentages = Object.entries(typeCounts).map(([type, count]) => ({
-      type: type.charAt(0).toUpperCase() + type.slice(1),
-      count,
-      percentage: totalMutations > 0 ? ((count / totalMutations) * 100).toFixed(1) + '%' : '0%'
-    }));
+    const typesWithPercentages = Object.entries(typeCounts).map(
+      ([type, count]) => ({
+        type: type.charAt(0).toUpperCase() + type.slice(1),
+        count,
+        percentage:
+          totalMutations > 0
+            ? ((count / totalMutations) * 100).toFixed(1) + "%"
+            : "0%",
+      }),
+    );
 
     return {
       nodes: nodesList,
       types: typesWithPercentages,
       totalMutations,
-      durationSeconds: durationSeconds.toFixed(1)
+      durationSeconds: durationSeconds.toFixed(1),
     };
   }
 

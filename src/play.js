@@ -1,6 +1,7 @@
 import versionsJson from "./versions.json";
 import populateVersions from "./populate-versions";
 import { createJSONEditor } from "vanilla-jsoneditor";
+import "./debug.js";
 
 function allowedVersion(version) {
   const allVersions = Object.keys(versionsJson);
@@ -37,12 +38,9 @@ function styleHref(version) {
 }
 
 function setupVersionSelector(version) {
-  console.log("setupVersionSelector", version);
   populateVersions(version);
   const versions = document.getElementById("versions");
-  console.log("versions", versions);
   versions.addEventListener("change", (e) => {
-    console.log("change", e.target.value);
     const newVersion = e.target.value;
     // reload page with selected version, preserving all other parameters
     const location = new URL(document.location);
@@ -62,23 +60,99 @@ function setupVersionSelector(version) {
   });
 }
 
+function setupModeSelector() {
+  // Get mode radio buttons
+  const playerMode = document.getElementById("player-mode");
+  const debugMode = document.getElementById("debug-mode");
+
+  if (playerMode && debugMode) {
+    // Check URL for initial debug mode state
+    const location = new URL(document.location);
+    const debugParam = location.searchParams.get("debug");
+
+    if (debugParam === "true") {
+      debugMode.checked = true;
+      playerMode.checked = false;
+      // Activate debug mode after everything is loaded
+      setTimeout(() => {
+        if (window.debugManager) {
+          window.debugManager.enterDebugMode();
+        }
+      }, 100);
+    }
+
+    // Player mode handler
+    playerMode.addEventListener("change", () => {
+      if (playerMode.checked) {
+        exitAllModes();
+        updateURLForMode(false);
+      }
+    });
+
+    // Debug mode handler
+    debugMode.addEventListener("change", () => {
+      if (debugMode.checked) {
+        exitAllModes();
+        if (window.debugManager) {
+          window.debugManager.enterDebugMode();
+        } else {
+          console.error("Debug manager not available!");
+        }
+        updateURLForMode(true);
+      }
+    });
+  } else {
+    console.error("Mode selector buttons not found!");
+  }
+}
+
+function updateURLForMode(isDebugMode) {
+  const location = new URL(document.location);
+
+  if (isDebugMode) {
+    location.searchParams.set("debug", "true");
+  } else {
+    location.searchParams.delete("debug");
+  }
+
+  // Update URL without reloading the page
+  window.history.replaceState({}, document.title, location.href);
+}
+
+// Make the function available globally for the debug manager
+window.updateURLForMode = updateURLForMode;
+
 function setupAnalysisButton() {
   const analysisBtn = document.getElementById("analysisBtn");
+
   if (analysisBtn) {
     analysisBtn.addEventListener("click", () => {
-      // Open analysis page in new tab
-      const analysisUrl = new URL(window.location.origin + "/analysis/");
-
-      // If we have a URL source, pass it to the analysis page
-      const location = new URL(document.location);
-      const url = location.searchParams.get("url");
-      if (url) {
-        analysisUrl.searchParams.set("url", url);
-      }
-
-      window.open(analysisUrl.href, "_blank");
+      openAnalysisPage();
     });
+  } else {
+    console.error("Analysis button not found!");
   }
+}
+
+function exitAllModes() {
+  // Exit debug mode if active
+  if (window.debugManager && window.debugManager.isDebugMode) {
+    window.debugManager.exitDebugMode();
+  }
+}
+
+function openAnalysisPage() {
+  // Open analysis page in new tab
+  const analysisUrl = new URL(window.location.origin + "/analysis/");
+
+  // If we have a URL source, pass it to the analysis page
+  const location = new URL(document.location);
+  const url = location.searchParams.get("url");
+  if (url) {
+    analysisUrl.searchParams.set("url", url);
+  }
+
+  window.open(analysisUrl.href, "_blank");
 }
 
 async function playVideo(events, config) {
@@ -102,6 +176,10 @@ async function playVideo(events, config) {
   window.events = events;
   document.querySelector(".loading").style.display = "none";
   component.addEventListener("finish", () => console.log("finish"));
+
+  // Initialize debug functionality
+  window.debugManager.setPlayer(component);
+  window.debugManager.setEvents(events);
 }
 
 function showJSON(json) {
@@ -116,6 +194,9 @@ function showJSON(json) {
       navigationBar: false,
     },
   });
+
+  // Store editor globally for debug access
+  window.jsonEditor = editor;
   window.events = json;
 }
 
@@ -272,6 +353,7 @@ async function startPlayer() {
   });
 
   setupVersionSelector(version);
+  setupModeSelector();
   setupAnalysisButton();
   document.head.appendChild(scriptEl);
 }
