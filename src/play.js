@@ -38,12 +38,9 @@ function styleHref(version) {
 }
 
 function setupVersionSelector(version) {
-  console.log("setupVersionSelector", version);
   populateVersions(version);
   const versions = document.getElementById("versions");
-  console.log("versions", versions);
   versions.addEventListener("change", (e) => {
-    console.log("change", e.target.value);
     const newVersion = e.target.value;
     // reload page with selected version, preserving all other parameters
     const location = new URL(document.location);
@@ -68,13 +65,10 @@ function setupModeSelector() {
   const playerMode = document.getElementById("player-mode");
   const debugMode = document.getElementById("debug-mode");
 
-  console.log("Mode buttons found:", { playerMode, debugMode });
-
   if (playerMode && debugMode) {
     // Player mode handler
     playerMode.addEventListener("change", () => {
       if (playerMode.checked) {
-        console.log("Switching to Player mode");
         exitAllModes();
       }
     });
@@ -82,7 +76,6 @@ function setupModeSelector() {
     // Debug mode handler
     debugMode.addEventListener("change", () => {
       if (debugMode.checked) {
-        console.log("Switching to Debug mode");
         exitAllModes();
         if (window.debugManager) {
           window.debugManager.enterDebugMode();
@@ -92,23 +85,18 @@ function setupModeSelector() {
       }
     });
 
-    console.log("Mode selector event listeners added");
   } else {
     console.error("Mode selector buttons not found!");
   }
 }
 
 function setupAnalysisButton() {
-  console.log("Setting up analysis button...");
   const analysisBtn = document.getElementById("analysisBtn");
-  console.log("Analysis button found:", analysisBtn);
 
   if (analysisBtn) {
     analysisBtn.addEventListener("click", () => {
-      console.log("Analysis button clicked");
       openAnalysisPage();
     });
-    console.log("Analysis button event listener added");
   } else {
     console.error("Analysis button not found!");
   }
@@ -179,14 +167,6 @@ function showJSON(json) {
   window.jsonEditor = editor;
   window.events = json;
 
-  console.log("JSON editor created and stored globally");
-  console.log(
-    "JSON editor methods:",
-    Object.getOwnPropertyNames(editor).filter(
-      (name) => typeof editor[name] === "function",
-    ),
-  );
-  console.log("JSON editor instance:", editor);
 }
 
 function getGistId(url) {
