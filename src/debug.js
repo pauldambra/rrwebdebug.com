@@ -10,52 +10,56 @@ export class DebugManager {
     // Default filter settings - similar to PostHog
     this.debugSettings = {
       types: [2, 3], // FullSnapshot, IncrementalSnapshot
-      incrementalSources: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] // All mutation types
+      incrementalSources: [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+      ], // All mutation types
     };
 
     this.snapshotTypes = {
-      0: 'DomContentLoaded',
-      1: 'Load',
-      2: 'FullSnapshot',
-      3: 'IncrementalSnapshot',
-      4: 'Meta',
-      5: 'Custom',
-      6: 'Plugin'
+      0: "DomContentLoaded",
+      1: "Load",
+      2: "FullSnapshot",
+      3: "IncrementalSnapshot",
+      4: "Meta",
+      5: "Custom",
+      6: "Plugin",
     };
 
     this.incrementalSource = {
-      0: 'Mutation',
-      1: 'MouseMove',
-      2: 'MouseInteraction',
-      3: 'Scroll',
-      4: 'ViewportResize',
-      5: 'Input',
-      6: 'TouchMove',
-      7: 'MediaInteraction',
-      8: 'StyleSheetRule',
-      9: 'CanvasMutation',
-      10: 'Font',
-      11: 'Log',
-      12: 'Drag',
-      13: 'StyleDeclaration',
-      14: 'Selection',
-      15: 'AdoptedStyleSheet'
+      0: "Mutation",
+      1: "MouseMove",
+      2: "MouseInteraction",
+      3: "Scroll",
+      4: "ViewportResize",
+      5: "Input",
+      6: "TouchMove",
+      7: "MediaInteraction",
+      8: "StyleSheetRule",
+      9: "CanvasMutation",
+      10: "Font",
+      11: "Log",
+      12: "Drag",
+      13: "StyleDeclaration",
+      14: "Selection",
+      15: "AdoptedStyleSheet",
     };
   }
 
   setPlayer(player) {
-    console.log('Setting player for debug manager:', player);
+    console.log("Setting player for debug manager:", player);
     this.player = player;
   }
 
   setEvents(events) {
-    console.log(`Setting events for debug manager: ${events ? events.length : 0} events`);
+    console.log(
+      `Setting events for debug manager: ${events ? events.length : 0} events`,
+    );
     this.events = events;
     // Don't filter events immediately - wait until debug mode is activated
   }
 
   filterEvents() {
-    this.filteredEvents = this.events.filter(event => {
+    this.filteredEvents = this.events.filter((event) => {
       // Filter by event type
       if (!this.debugSettings.types.includes(event.type)) {
         return false;
@@ -63,7 +67,9 @@ export class DebugManager {
 
       // If it's an incremental snapshot, filter by source
       if (event.type === 3 && event.data && event.data.source !== undefined) {
-        return this.debugSettings.incrementalSources.includes(event.data.source);
+        return this.debugSettings.incrementalSources.includes(
+          event.data.source,
+        );
       }
 
       return true;
@@ -78,21 +84,38 @@ export class DebugManager {
   }
 
   toggleDebugMode() {
-    console.log('Toggling debug mode, current state:', this.isDebugMode);
+    console.log("Toggling debug mode, current state:", this.isDebugMode);
     this.isDebugMode = !this.isDebugMode;
+    this._updateDebugMode();
+  }
 
+  enterDebugMode() {
+    if (!this.isDebugMode) {
+      console.log("Entering debug mode...");
+      this.isDebugMode = true;
+      this._updateDebugMode();
+    }
+  }
+
+  exitDebugMode() {
     if (this.isDebugMode) {
-      console.log('Entering debug mode...');
+      console.log("Exiting debug mode...");
+      this.isDebugMode = false;
+      this._updateDebugMode();
+    }
+  }
+
+  _updateDebugMode() {
+    if (this.isDebugMode) {
       this.pausePlayer();
       this.showDebugPanel();
       this.initializeDebugPanel(); // Initialize panel content when entering debug mode
       this.filterEvents();
     } else {
-      console.log('Exiting debug mode...');
       this.hideDebugPanel();
     }
 
-    this.updateDebugToggleUI();
+    this.updateModeSelector();
   }
 
   pausePlayer() {
@@ -142,66 +165,74 @@ export class DebugManager {
   }
 
   getPreviousEvent() {
-    return this.currentIndex > 0 ? this.filteredEvents[this.currentIndex - 1] : null;
+    return this.currentIndex > 0
+      ? this.filteredEvents[this.currentIndex - 1]
+      : null;
   }
 
   getNextEvent() {
-    return this.currentIndex < this.filteredEvents.length - 1 ? this.filteredEvents[this.currentIndex + 1] : null;
+    return this.currentIndex < this.filteredEvents.length - 1
+      ? this.filteredEvents[this.currentIndex + 1]
+      : null;
   }
 
   showDebugPanel() {
     // Show debug panel column first
-    const debugCol = document.querySelector('.debug-col');
+    const debugCol = document.querySelector(".debug-col");
     if (debugCol) {
-      debugCol.style.display = 'block';
+      debugCol.style.display = "block";
     }
 
     // Adjust main content layout
-    const playerCol = document.querySelector('.col-lg-9');
-    const jsonCol = document.querySelector('.col-lg-3:not(.debug-col)'); // Make sure we don't select the debug column
+    const playerCol = document.querySelector(".col-lg-9");
+    const jsonCol = document.querySelector(".col-lg-3:not(.debug-col)"); // Make sure we don't select the debug column
 
     if (playerCol && jsonCol) {
-      playerCol.className = 'col-lg-6';
+      playerCol.className = "col-lg-6";
       // jsonCol stays as col-lg-3
     }
 
     // Show debug panel content
-    const debugPanel = document.getElementById('debug-panel');
+    const debugPanel = document.getElementById("debug-panel");
     if (debugPanel) {
-      debugPanel.style.display = 'block';
+      debugPanel.style.display = "block";
     }
   }
 
   hideDebugPanel() {
     // Hide debug panel content
-    const debugPanel = document.getElementById('debug-panel');
+    const debugPanel = document.getElementById("debug-panel");
     if (debugPanel) {
-      debugPanel.style.display = 'none';
+      debugPanel.style.display = "none";
     }
 
     // Hide debug panel column
-    const debugCol = document.querySelector('.debug-col');
+    const debugCol = document.querySelector(".debug-col");
     if (debugCol) {
-      debugCol.style.display = 'none';
+      debugCol.style.display = "none";
     }
 
     // Restore original layout
-    const playerCol = document.querySelector('.col-lg-6');
-    const jsonCol = document.querySelector('.col-lg-3:not(.debug-col)');
+    const playerCol = document.querySelector(".col-lg-6");
+    const jsonCol = document.querySelector(".col-lg-3:not(.debug-col)");
 
     if (playerCol) {
-      playerCol.className = 'col-lg-9';
+      playerCol.className = "col-lg-9";
     }
     // jsonCol stays as col-lg-3
   }
 
-  updateDebugToggleUI() {
-    const debugToggle = document.getElementById('debug-toggle');
-    if (debugToggle) {
-      debugToggle.textContent = this.isDebugMode ? '🐛 Exit Debug' : '🐛 Debug Mode';
-      debugToggle.className = this.isDebugMode ?
-        'btn btn-warning btn-sm' :
-        'btn btn-outline-light btn-sm';
+  updateModeSelector() {
+    // Update mode selector to reflect current state
+    const debugMode = document.getElementById("debug-mode");
+    const playerMode = document.getElementById("player-mode");
+
+    if (debugMode && playerMode) {
+      if (this.isDebugMode) {
+        debugMode.checked = true;
+      } else {
+        playerMode.checked = true;
+      }
     }
   }
 
@@ -209,21 +240,21 @@ export class DebugManager {
     if (!this.isDebugMode) return;
 
     // Update slider
-    const debugSlider = document.getElementById('debug-slider');
+    const debugSlider = document.getElementById("debug-slider");
     if (debugSlider) {
       debugSlider.max = Math.max(0, this.filteredEvents.length - 1);
       debugSlider.value = this.currentIndex;
     }
 
     // Update counter
-    const debugCounter = document.getElementById('debug-counter');
+    const debugCounter = document.getElementById("debug-counter");
     if (debugCounter) {
       debugCounter.textContent = `${this.currentIndex} / ${Math.max(0, this.filteredEvents.length - 1)}`;
     }
 
     // Update buttons
-    const prevBtn = document.getElementById('debug-prev');
-    const nextBtn = document.getElementById('debug-next');
+    const prevBtn = document.getElementById("debug-prev");
+    const nextBtn = document.getElementById("debug-next");
 
     if (prevBtn) {
       prevBtn.disabled = this.currentIndex <= 0;
@@ -242,9 +273,9 @@ export class DebugManager {
     const previous = this.getPreviousEvent();
     const next = this.getNextEvent();
 
-    this.updateEventDisplay('current-event', current, 'Current Event');
-    this.updateEventDisplay('previous-event', previous, 'Previous Event');
-    this.updateEventDisplay('next-event', next, 'Next Event');
+    this.updateEventDisplay("current-event", current, "Current Event");
+    this.updateEventDisplay("previous-event", previous, "Previous Event");
+    this.updateEventDisplay("next-event", next, "Next Event");
   }
 
   updateEventDisplay(elementId, event, title) {
@@ -267,20 +298,24 @@ export class DebugManager {
         <div><strong>Type:</strong> ${this.snapshotTypes[event.type] || `Unknown(${event.type})`}</div>
         ${eventSummary}
       </div>
-      <button class="btn btn-sm btn-outline-secondary mt-2" onclick="debugManager.showEventDetails(${JSON.stringify(event).replace(/"/g, '&quot;')})">
+      <button class="btn btn-sm btn-outline-secondary mt-2" onclick="debugManager.showEventDetails(${JSON.stringify(event).replace(/"/g, "&quot;")})">
         Show Full Event
       </button>
     `;
   }
 
   createEventSummary(event) {
-    let summary = '';
+    let summary = "";
 
-    if (event.type === 3 && event.data) { // IncrementalSnapshot
-      const sourceName = this.incrementalSource[event.data.source] || `Unknown(${event.data.source})`;
+    if (event.type === 3 && event.data) {
+      // IncrementalSnapshot
+      const sourceName =
+        this.incrementalSource[event.data.source] ||
+        `Unknown(${event.data.source})`;
       summary += `<div><strong>Source:</strong> ${sourceName}</div>`;
 
-      if (event.data.source === 0 && event.data) { // Mutation
+      if (event.data.source === 0 && event.data) {
+        // Mutation
         if (event.data.adds) {
           summary += `<div><strong>Adds:</strong> ${event.data.adds.length}</div>`;
         }
@@ -301,8 +336,8 @@ export class DebugManager {
 
   showEventDetails(event) {
     // Create a modal or expand detailed view
-    const modal = document.createElement('div');
-    modal.className = 'modal fade';
+    const modal = document.createElement("div");
+    modal.className = "modal fade";
     modal.innerHTML = `
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -323,80 +358,100 @@ export class DebugManager {
     if (window.bootstrap && window.bootstrap.Modal) {
       const bootstrapModal = new window.bootstrap.Modal(modal);
       bootstrapModal.show();
-      modal.addEventListener('hidden.bs.modal', () => {
+      modal.addEventListener("hidden.bs.modal", () => {
         document.body.removeChild(modal);
       });
     } else {
       // Fallback if Bootstrap modal not available
-      modal.style.display = 'block';
-      modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-      modal.style.position = 'fixed';
-      modal.style.top = '0';
-      modal.style.left = '0';
-      modal.style.width = '100%';
-      modal.style.height = '100%';
-      modal.style.zIndex = '9999';
+      modal.style.display = "block";
+      modal.style.backgroundColor = "rgba(0,0,0,0.5)";
+      modal.style.position = "fixed";
+      modal.style.top = "0";
+      modal.style.left = "0";
+      modal.style.width = "100%";
+      modal.style.height = "100%";
+      modal.style.zIndex = "9999";
 
-      modal.addEventListener('click', (e) => {
+      modal.addEventListener("click", (e) => {
         if (e.target === modal) {
           document.body.removeChild(modal);
         }
       });
 
-      modal.querySelector('.btn-close').addEventListener('click', () => {
+      modal.querySelector(".btn-close").addEventListener("click", () => {
         document.body.removeChild(modal);
       });
     }
   }
 
   createTypeFilterHTML() {
-    return Object.entries(this.snapshotTypes).map(([key, value]) => {
-      const checked = this.debugSettings.types.includes(parseInt(key)) ? 'checked' : '';
-      return `
+    return Object.entries(this.snapshotTypes)
+      .map(([key, value]) => {
+        const checked = this.debugSettings.types.includes(parseInt(key))
+          ? "checked"
+          : "";
+        return `
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="type-${key}" value="${key}" ${checked}
                  onchange="debugManager.handleTypeFilterChange()">
           <label class="form-check-label small" for="type-${key}">${value}</label>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
   }
 
   createSourceFilterHTML() {
-    return Object.entries(this.incrementalSource).map(([key, value]) => {
-      const checked = this.debugSettings.incrementalSources.includes(parseInt(key)) ? 'checked' : '';
-      const disabled = !this.debugSettings.types.includes(3) ? 'disabled' : '';
-      return `
+    return Object.entries(this.incrementalSource)
+      .map(([key, value]) => {
+        const checked = this.debugSettings.incrementalSources.includes(
+          parseInt(key),
+        )
+          ? "checked"
+          : "";
+        const disabled = !this.debugSettings.types.includes(3)
+          ? "disabled"
+          : "";
+        return `
         <div class="form-check form-check-inline">
           <input class="form-check-input" type="checkbox" id="source-${key}" value="${key}" ${checked} ${disabled}
                  onchange="debugManager.handleSourceFilterChange()">
           <label class="form-check-label small" for="source-${key}">${value}</label>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
   }
 
   handleTypeFilterChange() {
-    const checkboxes = document.querySelectorAll('#debug-panel input[id^="type-"]:checked');
-    const newTypes = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const checkboxes = document.querySelectorAll(
+      '#debug-panel input[id^="type-"]:checked',
+    );
+    const newTypes = Array.from(checkboxes).map((cb) => parseInt(cb.value));
     this.updateTypeFilter(newTypes);
 
     // Update source filter UI state
     this.updateSourceFilterState();
-    console.log(`Debug panel initialized with ${this.events.length} total events, ${this.filteredEvents.length} filtered events`);
+    console.log(
+      `Debug panel initialized with ${this.events.length} total events, ${this.filteredEvents.length} filtered events`,
+    );
   }
 
   handleSourceFilterChange() {
-    const checkboxes = document.querySelectorAll('#debug-panel input[id^="source-"]:checked');
-    const newSources = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const checkboxes = document.querySelectorAll(
+      '#debug-panel input[id^="source-"]:checked',
+    );
+    const newSources = Array.from(checkboxes).map((cb) => parseInt(cb.value));
     this.updateSourceFilter(newSources);
   }
 
   updateSourceFilterState() {
-    const sourceCheckboxes = document.querySelectorAll('#debug-panel input[id^="source-"]');
+    const sourceCheckboxes = document.querySelectorAll(
+      '#debug-panel input[id^="source-"]',
+    );
     const incrementalEnabled = this.debugSettings.types.includes(3);
 
-    sourceCheckboxes.forEach(checkbox => {
+    sourceCheckboxes.forEach((checkbox) => {
       checkbox.disabled = !incrementalEnabled;
       if (!incrementalEnabled) {
         checkbox.checked = false;
@@ -409,14 +464,14 @@ export class DebugManager {
   }
 
   initializeDebugPanel() {
-    console.log('Initializing debug panel...');
-    const debugPanel = document.getElementById('debug-panel');
+    console.log("Initializing debug panel...");
+    const debugPanel = document.getElementById("debug-panel");
     if (!debugPanel) {
-      console.error('Debug panel element not found!');
+      console.error("Debug panel element not found!");
       return;
     }
 
-    console.log('Debug panel found, populating content...');
+    console.log("Debug panel found, populating content...");
     debugPanel.innerHTML = `
       <div class="card-header bg-warning">
         <h6 class="card-title mb-0">🐛 Debug Mode</h6>
@@ -511,6 +566,6 @@ export class DebugManager {
 }
 
 // Create global instance
-console.log('Creating debug manager instance...');
+console.log("Creating debug manager instance...");
 window.debugManager = new DebugManager();
-console.log('Debug manager created:', window.debugManager); 
+console.log("Debug manager created:", window.debugManager);

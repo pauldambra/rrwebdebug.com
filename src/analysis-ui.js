@@ -235,24 +235,26 @@ Duration: ${timeRange.duration}`;
       this.mutationsChart.destroy();
     }
 
-    const labels = mutationsData.map(item => {
+    const labels = mutationsData.map((item) => {
       const date = new Date(item.timestamp);
       return date.toLocaleTimeString();
     });
 
-    const data = mutationsData.map(item => item.total);
+    const data = mutationsData.map((item) => item.total);
 
     this.mutationsChart = new Chart(ctx, {
       type: "bar",
       data: {
         labels: labels,
-        datasets: [{
-          label: "Total Mutations",
-          data: data,
-          backgroundColor: "rgba(54, 162, 235, 0.6)",
-          borderColor: "rgba(54, 162, 235, 1)",
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            label: "Total Mutations",
+            data: data,
+            backgroundColor: "rgba(54, 162, 235, 0.6)",
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -260,43 +262,50 @@ Duration: ${timeRange.duration}`;
         plugins: {
           title: {
             display: true,
-            text: "Mutations Per Second"
+            text: "Mutations Per Second",
           },
           legend: {
-            display: false
-          }
+            display: false,
+          },
         },
         scales: {
           y: {
             beginAtZero: true,
             title: {
               display: true,
-              text: "Number of Mutations"
-            }
+              text: "Number of Mutations",
+            },
           },
           x: {
             title: {
               display: true,
-              text: "Time"
-            }
-          }
+              text: "Time",
+            },
+          },
         },
         onClick: (event, elements) => {
           if (elements.length > 0) {
             const index = elements[0].index;
             const selectedData = mutationsData[index];
-            this.showMutationDetails(selectedData.timestamp, selectedData.timestamp + 1000);
+            this.showMutationDetails(
+              selectedData.timestamp,
+              selectedData.timestamp + 1000,
+            );
           }
         },
         onHover: (event, elements) => {
-          event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-        }
-      }
+          event.native.target.style.cursor =
+            elements.length > 0 ? "pointer" : "default";
+        },
+      },
     });
   }
 
   showMutationDetails(startTime, endTime) {
-    const details = this.analyzer.getMutationDetailsForTimeRange(startTime, endTime);
+    const details = this.analyzer.getMutationDetailsForTimeRange(
+      startTime,
+      endTime,
+    );
 
     // Update selected time info
     const startDate = new Date(startTime);
@@ -314,11 +323,13 @@ Duration: ${timeRange.duration}`;
     // Populate nodes table
     this.populateNodesTable(details.nodes);
 
-    // Populate types table  
+    // Populate types table
     this.populateTypesTable(details.types);
 
     // Scroll to the details section
-    document.getElementById("mutationDetailsSection").scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("mutationDetailsSection")
+      .scrollIntoView({ behavior: "smooth" });
   }
 
   populateNodesTable(nodes) {
@@ -339,7 +350,7 @@ Duration: ${timeRange.duration}`;
     // Show top 20 most active nodes
     const topNodes = nodes.slice(0, 20);
 
-    topNodes.forEach(node => {
+    topNodes.forEach((node) => {
       const row = tbody.insertRow();
       const nodeCell = row.insertCell();
       const totalCell = row.insertCell();
@@ -380,7 +391,7 @@ Duration: ${timeRange.duration}`;
     // Sort by count descending
     const sortedTypes = types.sort((a, b) => b.count - a.count);
 
-    sortedTypes.forEach(type => {
+    sortedTypes.forEach((type) => {
       if (type.count > 0) {
         const row = tbody.insertRow();
         const typeCell = row.insertCell();

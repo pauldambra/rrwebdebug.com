@@ -63,42 +63,78 @@ function setupVersionSelector(version) {
   });
 }
 
-function setupAnalysisButton() {
-  const analysisBtn = document.getElementById("analysisBtn");
-  if (analysisBtn) {
-    analysisBtn.addEventListener("click", () => {
-      // Open analysis page in new tab
-      const analysisUrl = new URL(window.location.origin + "/analysis/");
+function setupModeSelector() {
+  console.log("Setting up mode selector...");
 
-      // If we have a URL source, pass it to the analysis page
-      const location = new URL(document.location);
-      const url = location.searchParams.get("url");
-      if (url) {
-        analysisUrl.searchParams.set("url", url);
+  // Get mode radio buttons
+  const playerMode = document.getElementById("player-mode");
+  const debugMode = document.getElementById("debug-mode");
+
+  console.log("Mode buttons found:", { playerMode, debugMode });
+
+  if (playerMode && debugMode) {
+    // Player mode handler
+    playerMode.addEventListener("change", () => {
+      if (playerMode.checked) {
+        console.log("Switching to Player mode");
+        exitAllModes();
       }
-
-      window.open(analysisUrl.href, "_blank");
     });
+
+    // Debug mode handler
+    debugMode.addEventListener("change", () => {
+      if (debugMode.checked) {
+        console.log("Switching to Debug mode");
+        exitAllModes();
+        if (window.debugManager) {
+          window.debugManager.enterDebugMode();
+        } else {
+          console.error("Debug manager not available!");
+        }
+      }
+    });
+
+    console.log("Mode selector event listeners added");
+  } else {
+    console.error("Mode selector buttons not found!");
   }
 }
 
-function setupDebugButton() {
-  console.log('Setting up debug button...');
-  const debugBtn = document.getElementById("debug-toggle");
-  console.log('Debug button found:', debugBtn);
-  if (debugBtn) {
-    debugBtn.addEventListener("click", () => {
-      console.log('Debug button clicked, debugManager:', window.debugManager);
-      if (window.debugManager) {
-        window.debugManager.toggleDebugMode();
-      } else {
-        console.error('Debug manager not available!');
-      }
+function setupAnalysisButton() {
+  console.log("Setting up analysis button...");
+  const analysisBtn = document.getElementById("analysisBtn");
+  console.log("Analysis button found:", analysisBtn);
+
+  if (analysisBtn) {
+    analysisBtn.addEventListener("click", () => {
+      console.log("Analysis button clicked");
+      openAnalysisPage();
     });
-    console.log('Debug button event listener added');
+    console.log("Analysis button event listener added");
   } else {
-    console.error('Debug button not found!');
+    console.error("Analysis button not found!");
   }
+}
+
+function exitAllModes() {
+  // Exit debug mode if active
+  if (window.debugManager && window.debugManager.isDebugMode) {
+    window.debugManager.exitDebugMode();
+  }
+}
+
+function openAnalysisPage() {
+  // Open analysis page in new tab
+  const analysisUrl = new URL(window.location.origin + "/analysis/");
+
+  // If we have a URL source, pass it to the analysis page
+  const location = new URL(document.location);
+  const url = location.searchParams.get("url");
+  if (url) {
+    analysisUrl.searchParams.set("url", url);
+  }
+
+  window.open(analysisUrl.href, "_blank");
 }
 
 async function playVideo(events, config) {
@@ -296,8 +332,8 @@ async function startPlayer() {
   });
 
   setupVersionSelector(version);
+  setupModeSelector();
   setupAnalysisButton();
-  setupDebugButton();
   document.head.appendChild(scriptEl);
 }
 

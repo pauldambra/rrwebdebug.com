@@ -102,13 +102,25 @@
         </div>
         <div class="col-lg-4 text-end">
           <div class="d-flex align-items-center justify-content-end">
-            <button id="debug-toggle" class="btn btn-outline-light btn-sm me-2"
-              title="Toggle step-by-step debugging mode">
-              🐛 Debug Mode
+            <!-- Mode Selector -->
+            <div class="btn-group me-2" role="group" aria-label="View modes">
+              <input type="radio" class="btn-check" name="viewMode" id="player-mode" autocomplete="off" checked>
+              <label class="btn btn-outline-light btn-sm" for="player-mode" title="Normal playback mode">
+                <span class="me-1">▶️</span>Player
+              </label>
+
+              <input type="radio" class="btn-check" name="viewMode" id="debug-mode" autocomplete="off">
+              <label class="btn btn-outline-light btn-sm" for="debug-mode" title="Step-by-step debugging mode">
+                <span class="me-1">🐛</span>Debug
+              </label>
+            </div>
+
+            <!-- Analysis Button -->
+            <button id="analysisBtn" class="btn btn-outline-light btn-sm me-3"
+              title="Open recording analysis in new tab">
+              <span class="me-1">📊</span>Analysis <span class="ms-1">↗️</span>
             </button>
-            <button id="analysisBtn" class="btn btn-outline-light btn-sm me-3" title="Open Recording Analysis">
-              📊 Analysis
-            </button>
+
             <label for="versions" class="form-label text-light me-2 mb-0">Version:</label>
             <select id="versions" class="form-select form-select-sm" style="width: auto"></select>
           </div>
@@ -142,8 +154,8 @@
       </div>
 
       <!-- Debug Panel (hidden by default) -->
-      <div class="col-lg-3 debug-col" style="display: none;">
-        <div class="card h-100 shadow-sm" id="debug-panel" style="display: none;">
+      <div class="col-lg-3 debug-col" style="display: none">
+        <div class="card h-100 shadow-sm" id="debug-panel" style="display: none">
           <!-- Debug panel content will be populated by JavaScript -->
         </div>
       </div>
