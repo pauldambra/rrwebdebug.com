@@ -1,6 +1,7 @@
 import versionsJson from "./versions.json";
 import populateVersions from "./populate-versions";
 import { createJSONEditor } from "vanilla-jsoneditor";
+import "./debug.js";
 
 function allowedVersion(version) {
   const allVersions = Object.keys(versionsJson);
@@ -81,6 +82,25 @@ function setupAnalysisButton() {
   }
 }
 
+function setupDebugButton() {
+  console.log('Setting up debug button...');
+  const debugBtn = document.getElementById("debug-toggle");
+  console.log('Debug button found:', debugBtn);
+  if (debugBtn) {
+    debugBtn.addEventListener("click", () => {
+      console.log('Debug button clicked, debugManager:', window.debugManager);
+      if (window.debugManager) {
+        window.debugManager.toggleDebugMode();
+      } else {
+        console.error('Debug manager not available!');
+      }
+    });
+    console.log('Debug button event listener added');
+  } else {
+    console.error('Debug button not found!');
+  }
+}
+
 async function playVideo(events, config) {
   const Player = window.rrwebPlayer.Player || window.rrwebPlayer; // for legacy version
   const component = new Player({
@@ -102,6 +122,10 @@ async function playVideo(events, config) {
   window.events = events;
   document.querySelector(".loading").style.display = "none";
   component.addEventListener("finish", () => console.log("finish"));
+
+  // Initialize debug functionality
+  window.debugManager.setPlayer(component);
+  window.debugManager.setEvents(events);
 }
 
 function showJSON(json) {
@@ -273,6 +297,7 @@ async function startPlayer() {
 
   setupVersionSelector(version);
   setupAnalysisButton();
+  setupDebugButton();
   document.head.appendChild(scriptEl);
 }
 
