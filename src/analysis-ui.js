@@ -72,7 +72,6 @@ class AnalysisUI {
     try {
       const events = await this.getEventsFromIndexedDB();
       if (events) {
-        console.log("Loaded events from IndexedDB");
         return events;
       }
     } catch (error) {
@@ -83,7 +82,6 @@ class AnalysisUI {
     try {
       const storedEvents = sessionStorage.getItem("rrweb-events");
       if (storedEvents) {
-        console.log("Loaded events from sessionStorage");
         return JSON.parse(storedEvents);
       }
     } catch (error) {
@@ -93,7 +91,6 @@ class AnalysisUI {
     // 3. Try to get from opener window (if opened from play page)
     try {
       if (window.opener && window.opener.events) {
-        console.log("Loaded events from opener window");
         return window.opener.events;
       }
     } catch (error) {
@@ -105,7 +102,6 @@ class AnalysisUI {
       const urlParams = new URLSearchParams(window.location.search);
       const url = urlParams.get("url");
       if (url) {
-        console.log("Loading events from URL");
         const response = await fetch(url);
         return await response.json();
       }

@@ -101,7 +101,6 @@ function setupModeSelector() {
         updateURLForMode(true);
       }
     });
-
   } else {
     console.error("Mode selector buttons not found!");
   }
@@ -199,7 +198,6 @@ function showJSON(json) {
   // Store editor globally for debug access
   window.jsonEditor = editor;
   window.events = json;
-
 }
 
 function getGistId(url) {
