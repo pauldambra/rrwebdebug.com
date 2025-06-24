@@ -175,6 +175,11 @@ export class DebugManager {
     window.jsonEditor.collapse([], true);
     window.jsonEditor.expand([unfilteredIndex]);
     window.jsonEditor.scrollTo([unfilteredIndex]);
+    const domElement = window.jsonEditor.findElement([unfilteredIndex]);
+    if (domElement) {
+      domElement.style.transition = 'background-color 0.3s ease-in-out';
+      domElement.style.backgroundColor = 'rgba(255, 255, 0, 0.15)'; // Transparent yellow
+    }
   }
 
   goToPrevious() {
