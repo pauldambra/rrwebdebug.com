@@ -271,26 +271,26 @@ Duration: ${timeRange.duration}`;
           zoom: {
             pan: {
               enabled: true,
-              mode: 'xy',
-              modifierKey: 'shift',
+              mode: "xy",
+              modifierKey: "shift",
             },
             zoom: {
-              mode: 'xy',
+              mode: "xy",
               drag: {
                 enabled: true,
-                borderColor: 'rgba(255, 99, 132, 1)',
+                borderColor: "rgba(255, 99, 132, 1)",
                 borderWidth: 1,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
               },
               wheel: {
                 enabled: true,
                 speed: 0.1,
               },
               pinch: {
-                enabled: true
-              }
-            }
-          }
+                enabled: true,
+              },
+            },
+          },
         },
         scales: {
           y: {
