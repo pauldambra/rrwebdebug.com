@@ -114,7 +114,7 @@ async function handleFormSubmission(e: Event) {
       }
     }
 
-    // in main rrwebdebug we only load arrays of snapshots, 
+    // in main rrwebdebug we only load arrays of snapshots,
     // but we might have exported a posthog json file, which has snapshots one level down
     if ("data" in eventsData && "version" in eventsData) {
       if ("snapshots" in eventsData.data) {

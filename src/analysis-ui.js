@@ -20,6 +20,7 @@ class AnalysisUI {
     const refreshBtn = document.getElementById("refreshBtn");
     const exportBtn = document.getElementById("exportBtn");
     const retryBtn = document.getElementById("retryBtn");
+    const resetZoomBtn = document.getElementById("resetZoomBtn");
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => this.loadAnalysis());
@@ -31,6 +32,10 @@ class AnalysisUI {
 
     if (retryBtn) {
       retryBtn.addEventListener("click", () => this.loadAnalysis());
+    }
+
+    if (resetZoomBtn) {
+      resetZoomBtn.addEventListener("click", () => this.resetZoom());
     }
   }
 
@@ -263,6 +268,29 @@ Duration: ${timeRange.duration}`;
           legend: {
             display: false,
           },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'xy',
+              modifierKey: 'shift',
+            },
+            zoom: {
+              mode: 'xy',
+              drag: {
+                enabled: true,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              },
+              wheel: {
+                enabled: true,
+                speed: 0.1,
+              },
+              pinch: {
+                enabled: true
+              }
+            }
+          }
         },
         scales: {
           y: {
@@ -478,6 +506,12 @@ Duration: ${timeRange.duration}`;
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
+  }
+
+  resetZoom() {
+    if (this.mutationsChart) {
+      this.mutationsChart.resetZoom();
+    }
   }
 }
 
