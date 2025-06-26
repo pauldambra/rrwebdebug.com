@@ -460,6 +460,77 @@ export class RRWebAnalyzer {
     };
   }
 
+  getSnapshotsForNode(nodeId, startTime, endTime) {
+    const snapshots = [];
+
+    for (const event of this.events) {
+      if (
+        event.type === 3 && // IncrementalSnapshot
+        event.data?.source === 0 && // Mutation
+        event.timestamp >= startTime &&
+        event.timestamp < endTime
+      ) {
+        const data = event.data;
+        let relevantToNode = false;
+        let snapshotData = {};
+
+        // Check if this event affects the target node
+        if (data.adds) {
+          const nodeAdds = data.adds.filter(add =>
+            add.parentId === parseInt(nodeId) || add.node?.id === parseInt(nodeId)
+          );
+          if (nodeAdds.length > 0) {
+            relevantToNode = true;
+            snapshotData.adds = nodeAdds;
+          }
+        }
+
+        if (data.removes) {
+          const nodeRemoves = data.removes.filter(remove =>
+            remove.parentId === parseInt(nodeId) || remove.id === parseInt(nodeId)
+          );
+          if (nodeRemoves.length > 0) {
+            relevantToNode = true;
+            snapshotData.removes = nodeRemoves;
+          }
+        }
+
+        if (data.texts) {
+          const nodeTexts = data.texts.filter(text => text.id === parseInt(nodeId));
+          if (nodeTexts.length > 0) {
+            relevantToNode = true;
+            snapshotData.texts = nodeTexts;
+          }
+        }
+
+        if (data.attributes) {
+          const nodeAttributes = data.attributes.filter(attr => attr.id === parseInt(nodeId));
+          if (nodeAttributes.length > 0) {
+            relevantToNode = true;
+            snapshotData.attributes = nodeAttributes;
+          }
+        }
+
+        if (relevantToNode) {
+          // Determine the type of mutation
+          let type = [];
+          if (snapshotData.adds) type.push(`${snapshotData.adds.length} add${snapshotData.adds.length > 1 ? 's' : ''}`);
+          if (snapshotData.removes) type.push(`${snapshotData.removes.length} remove${snapshotData.removes.length > 1 ? 's' : ''}`);
+          if (snapshotData.texts) type.push(`${snapshotData.texts.length} text change${snapshotData.texts.length > 1 ? 's' : ''}`);
+          if (snapshotData.attributes) type.push(`${snapshotData.attributes.length} attribute change${snapshotData.attributes.length > 1 ? 's' : ''}`);
+
+          snapshots.push({
+            timestamp: event.timestamp,
+            type: type.join(', '),
+            data: snapshotData
+          });
+        }
+      }
+    }
+
+    return snapshots.sort((a, b) => a.timestamp - b.timestamp);
+  }
+
   getFullAnalysis() {
     const messageTypes = this.analyzeMessageTypes();
     const incrementalSnapshots = this.analyzeIncrementalSnapshots();

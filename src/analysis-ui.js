@@ -326,6 +326,9 @@ Duration: ${timeRange.duration}`;
   }
 
   showMutationDetails(startTime, endTime) {
+    // Store current time range for modal usage
+    this.currentTimeRange = { startTime, endTime };
+
     const details = this.analyzer.getMutationDetailsForTimeRange(
       startTime,
       endTime,
@@ -376,6 +379,11 @@ Duration: ${timeRange.duration}`;
 
     topNodes.forEach((node) => {
       const row = tbody.insertRow();
+      // Add clickable class and data attributes
+      row.className = "node-row";
+      row.style.cursor = "pointer";
+      row.dataset.nodeId = node.nodeId;
+
       const nodeCell = row.insertCell();
       const totalCell = row.insertCell();
       const rateCell = row.insertCell();
@@ -394,6 +402,11 @@ Duration: ${timeRange.duration}`;
       totalCell.title = breakdown.join(", ");
 
       rateCell.textContent = `${node.rate}/s`;
+
+      // Add click event listener
+      row.addEventListener('click', () => {
+        this.showNodeSnapshotsModal(node.nodeId);
+      });
     });
   }
 
@@ -512,6 +525,56 @@ Duration: ${timeRange.duration}`;
     if (this.mutationsChart) {
       this.mutationsChart.resetZoom();
     }
+  }
+
+  showNodeSnapshotsModal(nodeId) {
+    // Get current time range from the last selected time period
+    if (!this.currentTimeRange) {
+      alert('Please select a time period first by clicking on the chart');
+      return;
+    }
+
+    const { startTime, endTime } = this.currentTimeRange;
+
+    // Get snapshots for this node
+    const snapshots = this.analyzer.getSnapshotsForNode(nodeId, startTime, endTime);
+
+    // Update modal title
+    const modalTitle = document.getElementById('nodeSnapshotsModalLabel');
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    modalTitle.textContent = `Node ${nodeId} Snapshots (${startDate.toLocaleTimeString()} - ${endDate.toLocaleTimeString()})`;
+
+    // Update modal content
+    const modalContent = document.getElementById('nodeSnapshotsContent');
+    this.renderNodeSnapshots(snapshots, modalContent);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('nodeSnapshotsModal'));
+    modal.show();
+  }
+
+  renderNodeSnapshots(snapshots, container) {
+    if (!snapshots || snapshots.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted">No snapshots found for this node in the selected time period</div>';
+      return;
+    }
+
+    let html = '';
+    snapshots.forEach((snapshot, index) => {
+      const timestamp = new Date(snapshot.timestamp);
+      html += `
+        <div class="snapshot-item">
+          <div class="snapshot-timestamp">${timestamp.toLocaleTimeString()}.${timestamp.getMilliseconds().toString().padStart(3, '0')}</div>
+          <div class="snapshot-type">${snapshot.type}</div>
+          <div class="snapshot-details">
+            <pre>${JSON.stringify(snapshot.data, null, 2)}</pre>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
   }
 }
 
