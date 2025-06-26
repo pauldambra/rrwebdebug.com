@@ -114,6 +114,17 @@ async function handleFormSubmission(e: Event) {
       }
     }
 
+    // in main rrwebdebug we only load arrays of snapshots, 
+    // but we might have exported a posthog json file, which has snapshots one level down
+    if ("data" in eventsData && "version" in eventsData) {
+      if ("snapshots" in eventsData.data) {
+        eventsData = eventsData.data.snapshots;
+      } else {
+        alert("Invalid PostHog JSON file");
+        return;
+      }
+    }
+
     // Store events data in IndexedDB with fallback to sessionStorage
     try {
       await storeEventsInIndexedDB(eventsData);
