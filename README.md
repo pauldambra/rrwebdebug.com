@@ -32,3 +32,9 @@ The analysis is based on [PostHog's exported-recordings-analyzer](https://github
 ### Adding New RRWeb Versions
 
 Add rrweb-player version number to bottom of `src/versions.json`.
+
+### Testing locally build rrweb
+
+Build the player
+Then copy the files from its `dist` folder in the `local-builds` folder
+Only works on localhost

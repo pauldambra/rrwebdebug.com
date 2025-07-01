@@ -18,7 +18,11 @@ function defaultVersion() {
 }
 
 function isLocalhost() {
-  return location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "";
+  return (
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.hostname === ""
+  );
 }
 
 function scriptSRC(version, type = "cjs") {
@@ -42,7 +46,9 @@ function scriptSRC(version, type = "cjs") {
       return `https://unpkg.dev/@posthog/rrweb-player@${version}/dist/rrweb-player.umd.cjs`;
     case "local":
     case "local-cjs":
-      console.error(`Local file type ${type} requested but not on localhost, falling back to CDN`);
+      console.error(
+        `Local file type ${type} requested but not on localhost, falling back to CDN`,
+      );
     default:
       console.error("Unknown type: " + type);
   }
@@ -63,9 +69,11 @@ function styleHref(version) {
       return [
         `https://unpkg.dev/@posthog/rrweb-player@${version}/dist/global.css`,
         `https://unpkg.dev/@posthog/rrweb-player@${version}/dist/style.css`,
-      ]
+      ];
     default:
-      return [`https://cdn.jsdelivr.net/npm/rrweb-player@${version}/dist/style.css`]
+      return [
+        `https://cdn.jsdelivr.net/npm/rrweb-player@${version}/dist/style.css`,
+      ];
   }
 }
 
@@ -367,13 +375,12 @@ async function startPlayer() {
     document.getElementById("json-source").innerText = url;
   }
 
-
-  styleHref(version, type).forEach(href => {
+  styleHref(version, type).forEach((href) => {
     const styleEl = document.createElement("link");
     styleEl.setAttribute("rel", "stylesheet");
     styleEl.setAttribute("href", href);
     document.head.appendChild(styleEl);
-  })
+  });
 
   const scriptEl = document.createElement("script");
   scriptEl.setAttribute("src", scriptSRC(version, type));
