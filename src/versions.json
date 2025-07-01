@@ -160,7 +160,7 @@
     "type": "posthog",
     "group": "posthog"
   },
-    "0.0.22": {
+  "0.0.22": {
     "rrwebVersion": "0.0.22",
     "type": "posthog",
     "group": "posthog"
