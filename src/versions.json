@@ -164,5 +164,11 @@
     "rrwebVersion": "0.0.22",
     "type": "posthog",
     "group": "posthog"
+  },
+  "local-cjs": {
+    "rrwebVersion": "local-cjs", 
+    "type": "local-cjs",
+    "group": "development",
+    "localPath": "/local-builds"
   }
 }

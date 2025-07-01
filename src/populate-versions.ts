@@ -1,4 +1,9 @@
 import versionsJson from "./versions.json";
+
+function isLocalhost() {
+  return location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "";
+}
+
 export function populateVersions(selectedVersion?: string) {
   const groupedSelects: Record<string, string> = {};
 
@@ -16,7 +21,7 @@ export function populateVersions(selectedVersion?: string) {
     groupedSelects,
   )
     .map(([group, options]) => {
-      return `<optgroup label="${group}">${options}</optgroup>`;
+      return `<optgroup label="${group}" ${group === 'development' && !isLocalhost() ? 'disabled' : undefined}>${options}</optgroup>`;
     })
     .join("");
 
