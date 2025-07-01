@@ -143,7 +143,7 @@ function exitAllModes() {
 
 function openAnalysisPage() {
   // Open analysis page in new tab
-  const analysisUrl = new URL(window.location.origin + "/analysis/");
+  const analysisUrl = new URL("/analysis/", document.baseURI);
 
   // If we have a URL source, pass it to the analysis page
   const location = new URL(document.location);
