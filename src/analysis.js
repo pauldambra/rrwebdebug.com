@@ -476,8 +476,10 @@ export class RRWebAnalyzer {
 
         // Check if this event affects the target node
         if (data.adds) {
-          const nodeAdds = data.adds.filter(add =>
-            add.parentId === parseInt(nodeId) || add.node?.id === parseInt(nodeId)
+          const nodeAdds = data.adds.filter(
+            (add) =>
+              add.parentId === parseInt(nodeId) ||
+              add.node?.id === parseInt(nodeId),
           );
           if (nodeAdds.length > 0) {
             relevantToNode = true;
@@ -486,8 +488,10 @@ export class RRWebAnalyzer {
         }
 
         if (data.removes) {
-          const nodeRemoves = data.removes.filter(remove =>
-            remove.parentId === parseInt(nodeId) || remove.id === parseInt(nodeId)
+          const nodeRemoves = data.removes.filter(
+            (remove) =>
+              remove.parentId === parseInt(nodeId) ||
+              remove.id === parseInt(nodeId),
           );
           if (nodeRemoves.length > 0) {
             relevantToNode = true;
@@ -496,7 +500,9 @@ export class RRWebAnalyzer {
         }
 
         if (data.texts) {
-          const nodeTexts = data.texts.filter(text => text.id === parseInt(nodeId));
+          const nodeTexts = data.texts.filter(
+            (text) => text.id === parseInt(nodeId),
+          );
           if (nodeTexts.length > 0) {
             relevantToNode = true;
             snapshotData.texts = nodeTexts;
@@ -504,7 +510,9 @@ export class RRWebAnalyzer {
         }
 
         if (data.attributes) {
-          const nodeAttributes = data.attributes.filter(attr => attr.id === parseInt(nodeId));
+          const nodeAttributes = data.attributes.filter(
+            (attr) => attr.id === parseInt(nodeId),
+          );
           if (nodeAttributes.length > 0) {
             relevantToNode = true;
             snapshotData.attributes = nodeAttributes;
@@ -514,15 +522,27 @@ export class RRWebAnalyzer {
         if (relevantToNode) {
           // Determine the type of mutation
           let type = [];
-          if (snapshotData.adds) type.push(`${snapshotData.adds.length} add${snapshotData.adds.length > 1 ? 's' : ''}`);
-          if (snapshotData.removes) type.push(`${snapshotData.removes.length} remove${snapshotData.removes.length > 1 ? 's' : ''}`);
-          if (snapshotData.texts) type.push(`${snapshotData.texts.length} text change${snapshotData.texts.length > 1 ? 's' : ''}`);
-          if (snapshotData.attributes) type.push(`${snapshotData.attributes.length} attribute change${snapshotData.attributes.length > 1 ? 's' : ''}`);
+          if (snapshotData.adds)
+            type.push(
+              `${snapshotData.adds.length} add${snapshotData.adds.length > 1 ? "s" : ""}`,
+            );
+          if (snapshotData.removes)
+            type.push(
+              `${snapshotData.removes.length} remove${snapshotData.removes.length > 1 ? "s" : ""}`,
+            );
+          if (snapshotData.texts)
+            type.push(
+              `${snapshotData.texts.length} text change${snapshotData.texts.length > 1 ? "s" : ""}`,
+            );
+          if (snapshotData.attributes)
+            type.push(
+              `${snapshotData.attributes.length} attribute change${snapshotData.attributes.length > 1 ? "s" : ""}`,
+            );
 
           snapshots.push({
             timestamp: event.timestamp,
-            type: type.join(', '),
-            data: snapshotData
+            type: type.join(", "),
+            data: snapshotData,
           });
         }
       }
