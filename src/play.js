@@ -54,7 +54,7 @@ function scriptSRC(version, type = "cjs") {
   }
 }
 
-function styleHref(version) {
+function styleHref(version, type) {
   // Handle local development CSS files
   if (isLocalhost()) {
     const versionConfig = versionsJson[version];

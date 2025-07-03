@@ -5,6 +5,7 @@ class AnalysisUI {
     this.analyzer = null;
     this.analysisData = null;
     this.mutationsChart = null;
+    this.showAbsoluteTime = false; // Default to time since start
     this.init();
   }
 
@@ -21,6 +22,7 @@ class AnalysisUI {
     const exportBtn = document.getElementById("exportBtn");
     const retryBtn = document.getElementById("retryBtn");
     const resetZoomBtn = document.getElementById("resetZoomBtn");
+    const timeToggleBtn = document.getElementById("timeToggleBtn");
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", () => this.loadAnalysis());
@@ -36,6 +38,10 @@ class AnalysisUI {
 
     if (resetZoomBtn) {
       resetZoomBtn.addEventListener("click", () => this.resetZoom());
+    }
+
+    if (timeToggleBtn) {
+      timeToggleBtn.addEventListener("click", () => this.toggleTimeDisplay());
     }
   }
 
@@ -236,9 +242,18 @@ Duration: ${timeRange.duration}`;
       this.mutationsChart.destroy();
     }
 
+    // Get the start timestamp for relative time calculation
+    const startTimestamp = mutationsData.length > 0 ? mutationsData[0].timestamp : 0;
+
     const labels = mutationsData.map((item) => {
-      const date = new Date(item.timestamp);
-      return date.toLocaleTimeString();
+      if (this.showAbsoluteTime) {
+        const date = new Date(item.timestamp);
+        return date.toLocaleTimeString();
+      } else {
+        // Time since start with smart formatting
+        const secondsSinceStart = (item.timestamp - startTimestamp) / 1000;
+        return this.formatDuration(secondsSinceStart);
+      }
     });
 
     const data = mutationsData.map((item) => item.total);
@@ -303,7 +318,7 @@ Duration: ${timeRange.duration}`;
           x: {
             title: {
               display: true,
-              text: "Time",
+              text: this.showAbsoluteTime ? "Absolute Time" : "Time Since Start",
             },
           },
         },
@@ -524,6 +539,38 @@ Duration: ${timeRange.duration}`;
   resetZoom() {
     if (this.mutationsChart) {
       this.mutationsChart.resetZoom();
+    }
+  }
+
+  formatDuration(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    
+    if (hours > 0) {
+      // Format: XhYmZs (e.g., "2h15m30s")
+      return `${hours}h${minutes}m${seconds}s`;
+    } else if (minutes > 0) {
+      // Format: YmZs (e.g., "5m20s")
+      return `${minutes}m${seconds}s`;
+    } else {
+      // Format: Zs (e.g., "45s")
+      return `${seconds}s`;
+    }
+  }
+
+  toggleTimeDisplay() {
+    this.showAbsoluteTime = !this.showAbsoluteTime;
+    
+    // Update button text
+    const timeToggleBtn = document.getElementById("timeToggleBtn");
+    if (timeToggleBtn) {
+      timeToggleBtn.textContent = this.showAbsoluteTime ? "🕐 Since Start" : "🕐 Absolute Time";
+    }
+    
+    // Redraw the chart with new time format
+    if (this.analysisData && this.analysisData.mutationsPerSecond) {
+      this.displayMutationsPerSecondChart();
     }
   }
 
